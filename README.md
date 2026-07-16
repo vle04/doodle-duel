@@ -16,3 +16,11 @@ Visit http://localhost:3000
 ```bash
 npm run build
 ```
+
+## Testing
+
+To run E2E (end-to-end) tests:
+```bash
+npm run test:e2e
+```
+This will also create a playwright report.
