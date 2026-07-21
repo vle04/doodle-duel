@@ -24,3 +24,8 @@ To run E2E (end-to-end) tests:
 npm run test:e2e
 ```
 This will also create a playwright report.
+
+## Flows
+
+Signup/Login flow:
+user -> signup/login page -> supabase auth -> if login succeeds -> create profile (if it doesn't exist) -> redirect to dashboard
