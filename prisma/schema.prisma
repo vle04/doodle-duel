@@ -68,7 +68,7 @@ model RoomPlayer {
   profileId String
   profile Profile @relation(fields: [profileId], references: [id])
 
-  team Team
+  team Team?
   isReady Boolean @default(false)
 
   joinedAt DateTime @default(now())

@@ -38,11 +38,46 @@ export default function Dashboard() {
     router.push("/login");
   }
 
+  // handle create room
+  async function handleCreateRoom() {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    // call the API route to create a room
+    const res = await fetch("/api/rooms", {
+      method: "POST",
+      body: JSON.stringify({
+        hostId: user?.id,
+      }),
+    });
+
+    if (!res.ok) {
+      alert("Failed to create room");
+      return;
+    }
+
+    const room = await res.json();
+
+    router.push(`/room/${room.code}`);
+  }
+
   return (
     <main className="flex flex-col items-center justify-center min-h-screen py-2 bg-white text-black">
-      <h1 className="text-2xl font-bold mb-4">Logged in!</h1>
+      <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
       {/* if user exists, display welcome message */}
       <p className="text-lg mb-4">Welcome, {email}</p>
+
+      {/* create or join room */}
+      <div className="flex flex-col items-center mb-4">
+        <button className="bg-blue-500 text-white rounded-md p-2 w-64 mb-4" onClick={handleCreateRoom}>
+          Create Room
+        </button>
+        <p className="text-lg">OR</p>
+        <div className="flex flex-col items-center mt-4">
+          <input placeholder="Room Code" className="border border-gray-300 rounded-md p-2 mb-4 w-64" />
+          <button className="bg-green-500 text-white rounded-md p-2 w-64">Join Room</button>
+        </div>
+      </div>
+
       <button onClick={handleLogout} className="bg-red-500 text-white rounded-md p-2 w-64">
         Logout
       </button>
