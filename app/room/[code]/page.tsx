@@ -31,7 +31,7 @@ export default async function Room({ params }: RoomPageProps) {
       <h1 className="text-2xl font-bold mb-4">Room {room.code}</h1>
 
       <h2 className="text-xl font-semibold mb-2">Players:</h2>
-      <ul>
+      <ul className="list-disc list-inside">
         {room.players.map((player) => (
           <li key={player.id} className="text-lg">
             {player.profile.username}

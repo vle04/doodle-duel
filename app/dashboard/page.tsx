@@ -41,7 +41,7 @@ export default function Dashboard() {
   // handle create room
   async function handleCreateRoom() {
     const { data: { user } } = await supabase.auth.getUser();
-    
+
     // call the API route to create a room
     const res = await fetch("/api/rooms", {
       method: "POST",
@@ -60,6 +60,27 @@ export default function Dashboard() {
     router.push(`/room/${room.code}`);
   }
 
+  // handle join room
+  async function handleJoinRoom(roomCode: string) {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // call the API route to join a room
+    const res = await fetch("/api/rooms/join", {
+      method: "POST",
+      body: JSON.stringify({
+        userId: user?.id,
+        roomCode,
+      }),
+    });
+
+    if (!res.ok) {
+      alert("Failed to join room");
+      return;
+    }
+
+    router.push(`/room/${roomCode}`);
+  }
+
   return (
     <main className="flex flex-col items-center justify-center min-h-screen py-2 bg-white text-black">
       <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
@@ -68,17 +89,28 @@ export default function Dashboard() {
 
       {/* create or join room */}
       <div className="flex flex-col items-center mb-4">
-        <button className="bg-blue-500 text-white rounded-md p-2 w-64 mb-4" onClick={handleCreateRoom}>
+        <button 
+          className="bg-blue-500 text-white rounded-md p-2 w-64 mb-4" 
+          onClick={handleCreateRoom}
+        >
           Create Room
         </button>
         <p className="text-lg">OR</p>
         <div className="flex flex-col items-center mt-4">
-          <input placeholder="Room Code" className="border border-gray-300 rounded-md p-2 mb-4 w-64" />
-          <button className="bg-green-500 text-white rounded-md p-2 w-64">Join Room</button>
+          <input placeholder="Room Code" className="border border-gray-300 rounded-md p-2 mb-4 w-64" id="roomCode" />
+          <button 
+            className="bg-green-500 text-white rounded-md p-2 w-64" 
+            onClick={() => handleJoinRoom((document.getElementById("roomCode") as HTMLInputElement).value)}
+          >
+            Join Room
+          </button>
         </div>
       </div>
 
-      <button onClick={handleLogout} className="bg-red-500 text-white rounded-md p-2 w-64">
+      <button 
+        onClick={handleLogout} 
+        className="bg-red-500 text-white rounded-md p-2 w-64"
+      >
         Logout
       </button>
     </main>
