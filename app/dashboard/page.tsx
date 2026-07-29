@@ -15,6 +15,7 @@ export default function Dashboard() {
 
       if (!user) {
         // if no user, redirect to login page
+        console.log("here");
         router.replace("/login"); // replace instead of push to prevent going back to dashboard
         return;
       }
@@ -42,6 +43,10 @@ export default function Dashboard() {
   async function handleCreateRoom() {
     const { data: { user } } = await supabase.auth.getUser();
 
+    if (!user) {
+      throw new Error("No authenticated user");
+    }
+
     // call the API route to create a room
     const res = await fetch("/api/rooms", {
       method: "POST",
@@ -51,12 +56,11 @@ export default function Dashboard() {
     });
 
     if (!res.ok) {
-      alert("Failed to create room");
-      return;
+      console.error(await res.text());
+      throw new Error("Failed to create room");
     }
 
     const room = await res.json();
-
     router.push(`/room/${room.code}`);
   }
 
