@@ -46,7 +46,7 @@ test.describe("Login", () => {
     await expect(page).toHaveURL(/\/dashboard$/);
 
     await expect(
-      page.getByRole("heading", { name: /Logged in!/i })
+      page.getByRole("heading", { name: /Dashboard/i })
     ).toBeVisible();
 
     await expect(
