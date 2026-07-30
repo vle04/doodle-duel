@@ -34,7 +34,7 @@ export default function LeaveRoomButton({
   return (
     <button
       onClick={leaveRoom}
-      className="text-red-500 hover:underline"
+      className="text-red-500 hover:underline flex justify-center items-center text-center flex-col"
     >
       Leave Room
     </button>

@@ -15,7 +15,6 @@ export default function Dashboard() {
 
       if (!user) {
         // if no user, redirect to login page
-        console.log("here");
         router.replace("/login"); // replace instead of push to prevent going back to dashboard
         return;
       }
