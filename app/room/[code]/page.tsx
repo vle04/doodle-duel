@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import TeamSelecter from "./teamSelector";
 import LeaveRoomButton from "./leaveRoomButton";
+import StartGameButton from "./startGameButton";
 
 interface RoomPageProps {
   params: Promise<{
@@ -38,6 +39,7 @@ export default async function Room({ params }: RoomPageProps) {
       <div className="flex flex-col items-center justify-center gap-4">
         <TeamSelecter roomCode={room.code} />
         <LeaveRoomButton roomCode={room.code} />
+        <StartGameButton roomCode={room.code} hostId={room.hostId} />
       </div>
 
       <div className="flex flex-col items-center mt-4 w-full max-w-md">
