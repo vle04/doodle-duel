@@ -32,9 +32,6 @@ test.describe("Room Flow", () => {
     await login(page);
     await createRoom(page);
 
-    console.log(await page.url());
-    await page.screenshot({ path: "debug-dashboard.png" });
-
     await expect(
       page.getByRole("heading", { name: /Room/i })
     ).toBeVisible();
@@ -69,5 +66,18 @@ test.describe("Room Flow", () => {
     await page.getByRole("button", { name: /Leave Room/i }).click();
 
     await expect(page).toHaveURL(/\/dashboard$/);
+  });
+
+  test("host can start the game", async ({ page }) => {
+    await login(page);
+    await createRoom(page);
+
+    await page.getByRole("button", { name: /Start Game/i }).click();
+
+    await expect(page).toHaveURL(/\/room\/[A-Z0-9]+\/game$/);
+
+    await expect(
+      page.getByRole("heading", { name: /Game Started!/i })
+    ).toBeVisible();
   });
 });
