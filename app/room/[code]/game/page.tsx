@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma"; 
 import { notFound, redirect } from "next/navigation";
 import { RoomStatus } from "@/app/generated/prisma/enums";
+import Canvas from "./Canvas";
 
 interface GamePageProps {
   params: Promise<{
@@ -35,7 +36,7 @@ export default async function GamePage({ params }: GamePageProps) {
   }
 
   return (
-    <main className="flex w-full p-20 flex-col">
+    <main className="flex w-full p-20 flex-col bg-white text-black">
       {/* header */}
       <div className="flex flex-row justify-between">
         <h1 className="text-3xl font-bold">Room {room.code}</h1>
@@ -63,11 +64,9 @@ export default async function GamePage({ params }: GamePageProps) {
       </div>
 
       {/* canvas & chat */}
-      <div className="flex flex-row gap-10">
-        <div className="mt-8 border-2 border-gray-400 w-[60%] h-[450px] rounded-lg flex items-center justify-center bg-white">
-          Canvas Placeholder
-        </div>
-        <div className="mt-8 border-2 border-gray-400 w-[40%] h-[450px] rounded-lg flex items-center justify-center bg-white">
+      <div className="flex flex-row gap-10 mt-8">
+        <Canvas/>
+        <div className="border-2 border-gray-400 w-[40%] h-[450px] rounded-lg flex items-center justify-center bg-white">
           Chat
         </div>
       </div>
