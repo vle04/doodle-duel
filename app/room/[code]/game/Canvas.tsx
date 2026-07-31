@@ -2,12 +2,19 @@
 
 "use client";
 
+import { RealtimeChannel } from "@supabase/supabase-js";
 import { useRef, useEffect } from "react";
+import { supabase } from "@/lib/supabase/client";
 
-export default function Canvas() {
+interface CanvasProps {
+  roomCode: string;
+}
+
+export default function Canvas({ roomCode }: CanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
   const drawing = useRef(false);
+  const channelRef = useRef<RealtimeChannel | null>(null);
 
   // initialize the drawing context once
   useEffect(() => {
@@ -25,46 +32,68 @@ export default function Canvas() {
 
     // store context in a ref to access it inside mouse handlers
     ctxRef.current = ctx;
-  }, []);
+
+    // create realtime channel & subscribe
+    const channel = supabase.channel(`room:${roomCode}`)
+    channelRef.current = channel;
+    channel.subscribe((status) => {
+      console.log("Realtime status:", status);
+    });
+
+    // unsubscribe on unmount
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [roomCode]);
 
   // mouse down
   function startDrawing(event: React.MouseEvent<HTMLCanvasElement>) {
-    const ctx = ctxRef.current;
-    if (!ctx) return;
-
     drawing.current = true;
 
     // get mouse coordinates
     const x = event.nativeEvent.offsetX;
     const y = event.nativeEvent.offsetY;
 
-    // move the drawing cursor to the starting point
-    ctx.beginPath();
-    ctx.moveTo(x, y);
+    beginStroke(x, y);
   }
 
   // mouse move
   function draw(event: React.MouseEvent<HTMLCanvasElement>) {
     if (!drawing.current) return;
 
-    const ctx = ctxRef.current;
-    if (!ctx) return;
-
     // get mouse coordinates
     const x = event.nativeEvent.offsetX;
     const y = event.nativeEvent.offsetY;
+
+    continueStroke(x, y);
+  }
+
+  function stopDrawing() {
+    drawing.current = false;
+    endStroke();
+  }
+
+  // drawing helper functions
+  function beginStroke(x: number, y: number) {
+    const ctx = ctxRef.current;
+    if (!ctx) return;
+
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  }
+
+  function continueStroke(x: number, y: number) {
+    const ctx = ctxRef.current;
+    if (!ctx) return;
 
     ctx.lineTo(x, y);
     ctx.stroke();
   }
 
-  function stopDrawing() {
-    drawing.current = false;
-
+  function endStroke() {
     const ctx = ctxRef.current;
     if (!ctx) return;
 
-    // finish the path
     ctx.closePath();
   }
 

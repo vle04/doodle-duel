@@ -65,7 +65,7 @@ export default async function GamePage({ params }: GamePageProps) {
 
       {/* canvas & chat */}
       <div className="flex flex-row gap-10 mt-8">
-        <Canvas/>
+        <Canvas roomCode={code} />
         <div className="border-2 border-gray-400 w-[40%] h-[450px] rounded-lg flex items-center justify-center bg-white">
           Chat
         </div>
