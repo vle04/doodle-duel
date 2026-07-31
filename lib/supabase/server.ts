@@ -15,8 +15,14 @@ export async function createClient() {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll() {
-          // No-op in API routes unless you need to refresh cookies
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch {
+            // Server Component cannot set cookies
+          }
         },
       },
     }

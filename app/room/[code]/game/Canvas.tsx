@@ -5,25 +5,21 @@
 "use client";
 
 import { RealtimeChannel } from "@supabase/supabase-js";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
 
 interface CanvasProps {
   roomCode: string;
+  team: "A" | "B";
+  userId: string;
+  isDrawer: boolean;
 }
 
-export default function Canvas({ roomCode }: CanvasProps) {
-  const [userId, setUserId] = useState<string | null>(null);
+export default function Canvas({ roomCode, team, userId, isDrawer }: CanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
   const drawing = useRef(false);
   const channelRef = useRef<RealtimeChannel | null>(null);
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUserId(data.user?.id ?? null);
-    });
-  }, []);
 
   // initialize the drawing context once
   useEffect(() => {
@@ -42,15 +38,14 @@ export default function Canvas({ roomCode }: CanvasProps) {
     // store context in a ref to access it inside mouse handlers
     ctxRef.current = ctx;
 
-    // create realtime channel & subscribe
-    const channel = supabase.channel(`room:${roomCode}`);
+    // create realtime channel & subscribe to the team-only channel
+    const channel = supabase.channel(`room:${roomCode}:team:${team}`);
 
     // listen for broadcasts
     channel.on(
       "broadcast",
       { event: "drawing" },
       ({ payload }) => {
-        // ignore your own broadcasts
         if (payload.userId === userId) return;
 
         switch (payload.type) {
@@ -74,14 +69,15 @@ export default function Canvas({ roomCode }: CanvasProps) {
     });
     channelRef.current = channel;
 
-    // unsubscribe on unmount
     return () => {
       channel.unsubscribe();
     };
-  }, [userId, roomCode]);
+  }, [roomCode, team, userId]);
 
   // mouse down
   function startDrawing(event: React.MouseEvent<HTMLCanvasElement>) {
+    if (!isDrawer) return;
+
     drawing.current = true;
 
     // get mouse coordinates
@@ -105,7 +101,7 @@ export default function Canvas({ roomCode }: CanvasProps) {
 
   // mouse move
   function draw(event: React.MouseEvent<HTMLCanvasElement>) {
-    if (!drawing.current) return;
+    if (!drawing.current || !isDrawer) return;
 
     // get mouse coordinates
     const x = event.nativeEvent.offsetX;
@@ -127,6 +123,8 @@ export default function Canvas({ roomCode }: CanvasProps) {
   }
 
   function stopDrawing() {
+    if (!isDrawer) return;
+
     drawing.current = false;
     endStroke();
 

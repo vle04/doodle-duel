@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { RoomStatus } from "@/app/generated/prisma/enums";
+import { WORDS } from "@/lib/words";
 
 export async function POST(req: NextRequest) {
   try {
@@ -34,13 +35,56 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Game has already started" }, { status: 400 });
     }
 
+    // get players
+    const players = await prisma.roomPlayer.findMany({
+      where: {
+        roomId: room.id,
+      },
+    });
+
+    // split teams
+    const teamAPlayers = players.filter((player) => player.team === "A");
+    const teamBPlayers = players.filter((player) => player.team === "B");
+
+    if (teamAPlayers.length === 0 || teamBPlayers.length === 0) {
+      return NextResponse.json(
+        { error: "Both teams need at least one player" },
+        { status: 400 }
+      );
+    }
+
+    // pick drawers
+    const drawerA = teamAPlayers[Math.floor(Math.random() * teamAPlayers.length)];
+    const drawerB = teamBPlayers[Math.floor(Math.random() * teamBPlayers.length)];
+
+    // pick word
+    const word = WORDS[Math.floor(Math.random() * WORDS.length)];
+
+    // create the round
+    const round = await prisma.round.create({
+      data: {
+        roomId: room.id,
+        number: 1,
+        drawerAId: drawerA.profileId,
+        drawerBId: drawerB.profileId,
+        wordChooserTeam: "A",
+        secret: {
+          create: {
+            word,
+          },
+        },
+        startedAt: new Date(),
+      },
+    });
+
     // update the room status
     const updatedRoom = await prisma.room.update({
       where: {
-        id: room.id
+        id: room.id,
       },
       data: {
-        status: RoomStatus.PLAYING
+        status: RoomStatus.PLAYING,
+        currentRound: 1,
       }
     });
 
@@ -48,7 +92,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, message: "Game start successfully" });
   } catch (error) {
-    console.error(error);
+    console.error("START GAME ERROR:", error);
     return NextResponse.json({ error: "Failed to start game" }, { status: 500 });
   }
 }

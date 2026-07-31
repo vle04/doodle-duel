@@ -3,7 +3,8 @@
 import { prisma } from "@/lib/prisma"; 
 import { notFound, redirect } from "next/navigation";
 import { RoomStatus } from "@/app/generated/prisma/enums";
-import Canvas from "./Canvas";
+import TeamCanvas from "./TeamCanvas";
+import GameInfo from "./GameInfo";
 
 interface GamePageProps {
   params: Promise<{
@@ -21,19 +22,27 @@ export default async function GamePage({ params }: GamePageProps) {
     include: {
       players: {
         include: {
-          profile: true
-        }
-      }
-    }
+          profile: true,
+        },
+      },
+      rounds: {
+        orderBy: {
+          number: "desc",
+        },
+        take: 1,
+        include: {
+          secret: true,
+          drawerA: true,
+          drawerB: true,
+        },
+      },
+    },
   });
 
-  if (!room) {
-    notFound();
-  }
+  if (!room) notFound();
+  if (room.status !== RoomStatus.PLAYING) redirect(`/room/${code}`);
 
-  if (room.status !== RoomStatus.PLAYING) {
-    redirect(`/room/${code}`);
-  }
+  const currentRound = room.rounds[0];
 
   return (
     <main className="flex w-full p-20 flex-col bg-white text-black">
@@ -53,19 +62,25 @@ export default async function GamePage({ params }: GamePageProps) {
         </div>
       </div>
 
-      {/* drawer & word */}
-      <div className="mt-6">
-        <p>
-          <strong>Drawer:</strong> TBD
-        </p>
-        <p>
-          <strong>Word:</strong> _______
-        </p>
-      </div>
+      <GameInfo
+        drawerAId={currentRound.drawerAId}
+        drawerBId={currentRound.drawerBId}
+        drawerAUsername={currentRound.drawerA.username}
+        drawerBUsername={currentRound.drawerB.username}
+        secretWord={currentRound.secret?.word}
+      />
 
       {/* canvas & chat */}
       <div className="flex flex-row gap-10 mt-8">
-        <Canvas roomCode={code} />
+        <TeamCanvas
+          roomCode={code}
+          roomPlayers={room.players.map((player) => ({
+            profileId: player.profileId,
+            team: player.team,
+          }))}
+          drawerAId={currentRound.drawerAId}
+          drawerBId={currentRound.drawerBId}
+        />
         <div className="border-2 border-gray-400 w-[40%] h-[450px] rounded-lg flex items-center justify-center bg-white">
           Chat
         </div>
