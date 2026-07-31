@@ -47,7 +47,7 @@ export default function Canvas({ roomCode }: CanvasProps) {
   }, [roomCode]);
 
   // mouse down
-  function startDrawing(event: React.MouseEvent<HTMLCanvasElement>) {
+  async function startDrawing(event: React.MouseEvent<HTMLCanvasElement>) {
     drawing.current = true;
 
     // get mouse coordinates
@@ -55,10 +55,21 @@ export default function Canvas({ roomCode }: CanvasProps) {
     const y = event.nativeEvent.offsetY;
 
     beginStroke(x, y);
+
+    // broadcast message
+    await channelRef.current?.send({
+      type: "broadcast",
+      event: "drawing",
+      payload: {
+        type: "start",
+        x,
+        y,
+      },
+    });
   }
 
   // mouse move
-  function draw(event: React.MouseEvent<HTMLCanvasElement>) {
+  async function draw(event: React.MouseEvent<HTMLCanvasElement>) {
     if (!drawing.current) return;
 
     // get mouse coordinates
@@ -66,11 +77,31 @@ export default function Canvas({ roomCode }: CanvasProps) {
     const y = event.nativeEvent.offsetY;
 
     continueStroke(x, y);
+
+    // broadcast message
+    await channelRef.current?.send({
+      type: "broadcast",
+      event: "drawing",
+      payload: {
+        type: "draw",
+        x,
+        y,
+      },
+    });
   }
 
-  function stopDrawing() {
+  async function stopDrawing() {
     drawing.current = false;
     endStroke();
+
+    // broadcast message
+    await channelRef.current?.send({
+      type: "broadcast",
+      event: "drawing",
+      payload: {
+        type: "end",
+      },
+    });
   }
 
   // drawing helper functions
