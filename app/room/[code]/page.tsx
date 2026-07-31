@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
-import TeamSelecter from "./teamSelector";
-import LeaveRoomButton from "./leaveRoomButton";
-import StartGameButton from "./startGameButton";
+import TeamSelecter from "./TeamSelector";
+import LeaveRoomButton from "./LeaveRoomButton";
+import StartGameButton from "./StartGameButton";
 
 interface RoomPageProps {
   params: Promise<{
