@@ -5,25 +5,31 @@
 "use client";
 
 import { RealtimeChannel } from "@supabase/supabase-js";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 
 interface CanvasProps {
-  userId: string;
   roomCode: string;
 }
 
-export default function Canvas({ userId, roomCode }: CanvasProps) {
+export default function Canvas({ roomCode }: CanvasProps) {
+  const [userId, setUserId] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
   const drawing = useRef(false);
   const channelRef = useRef<RealtimeChannel | null>(null);
 
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUserId(data.user?.id ?? null);
+    });
+  }, []);
+
   // initialize the drawing context once
   useEffect(() => {
     const canvas = canvasRef.current;
 
-    if (!canvas) return;
+    if (!canvas || !userId) return;
 
     const ctx = canvas.getContext("2d");
 
@@ -37,7 +43,7 @@ export default function Canvas({ userId, roomCode }: CanvasProps) {
     ctxRef.current = ctx;
 
     // create realtime channel & subscribe
-    const channel = supabase.channel(`room:${roomCode}`)
+    const channel = supabase.channel(`room:${roomCode}`);
 
     // listen for broadcasts
     channel.on(

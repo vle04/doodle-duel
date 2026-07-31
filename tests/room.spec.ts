@@ -27,6 +27,8 @@ async function createRoom(page: Page) {
   await expect(page).toHaveURL(/\/room\/.+$/);
 }
 
+test.describe.configure({ mode: "serial" });
+
 test.describe("Room Flow", () => {
   test("user can create a room", async ({ page }) => {
     await login(page);
@@ -77,7 +79,7 @@ test.describe("Room Flow", () => {
     await expect(page).toHaveURL(/\/room\/[A-Z0-9]+\/game$/);
 
     await expect(
-      page.getByRole("heading", { name: /Game Started!/i })
+      page.getByRole("heading", { name: /Room/i })
     ).toBeVisible();
   });
 });

@@ -4,7 +4,6 @@ import { prisma } from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
 import { RoomStatus } from "@/app/generated/prisma/enums";
 import Canvas from "./Canvas";
-import { createClient } from "@/lib/supabase/server";
 
 interface GamePageProps {
   params: Promise<{
@@ -13,10 +12,6 @@ interface GamePageProps {
 }
 
 export default async function GamePage({ params }: GamePageProps) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
   const { code } = await params;
 
   const room = await prisma.room.findUnique({
@@ -70,7 +65,7 @@ export default async function GamePage({ params }: GamePageProps) {
 
       {/* canvas & chat */}
       <div className="flex flex-row gap-10 mt-8">
-        <Canvas userId={user.id} roomCode={code} />
+        <Canvas roomCode={code} />
         <div className="border-2 border-gray-400 w-[40%] h-[450px] rounded-lg flex items-center justify-center bg-white">
           Chat
         </div>
