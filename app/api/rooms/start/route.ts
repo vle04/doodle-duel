@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     }
 
     // update the room status
-    await prisma.room.update({
+    const updatedRoom = await prisma.room.update({
       where: {
         id: room.id
       },
@@ -43,6 +43,8 @@ export async function POST(req: NextRequest) {
         status: RoomStatus.PLAYING
       }
     });
+
+    console.log(updatedRoom?.status);
 
     return NextResponse.json({ success: true, message: "Game start successfully" });
   } catch (error) {

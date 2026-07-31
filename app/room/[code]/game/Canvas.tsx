@@ -1,4 +1,6 @@
 // canvas component for the game page
+// possibly add throttle for drawing events?
+// add types for the payload?
 
 "use client";
 
@@ -7,10 +9,11 @@ import { useRef, useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
 
 interface CanvasProps {
+  userId: string;
   roomCode: string;
 }
 
-export default function Canvas({ roomCode }: CanvasProps) {
+export default function Canvas({ userId, roomCode }: CanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
   const drawing = useRef(false);
@@ -35,19 +38,44 @@ export default function Canvas({ roomCode }: CanvasProps) {
 
     // create realtime channel & subscribe
     const channel = supabase.channel(`room:${roomCode}`)
-    channelRef.current = channel;
+
+    // listen for broadcasts
+    channel.on(
+      "broadcast",
+      { event: "drawing" },
+      ({ payload }) => {
+        // ignore your own broadcasts
+        if (payload.userId === userId) return;
+
+        switch (payload.type) {
+          case "start":
+            beginStroke(payload.x, payload.y);
+            break;
+
+          case "draw":
+            continueStroke(payload.x, payload.y);
+            break;
+
+          case "end":
+            endStroke();
+            break;
+        }
+      }
+    );
+
     channel.subscribe((status) => {
       console.log("Realtime status:", status);
     });
+    channelRef.current = channel;
 
     // unsubscribe on unmount
     return () => {
       channel.unsubscribe();
     };
-  }, [roomCode]);
+  }, [userId, roomCode]);
 
   // mouse down
-  async function startDrawing(event: React.MouseEvent<HTMLCanvasElement>) {
+  function startDrawing(event: React.MouseEvent<HTMLCanvasElement>) {
     drawing.current = true;
 
     // get mouse coordinates
@@ -57,10 +85,11 @@ export default function Canvas({ roomCode }: CanvasProps) {
     beginStroke(x, y);
 
     // broadcast message
-    await channelRef.current?.send({
+    channelRef.current?.send({
       type: "broadcast",
       event: "drawing",
       payload: {
+        userId,
         type: "start",
         x,
         y,
@@ -69,7 +98,7 @@ export default function Canvas({ roomCode }: CanvasProps) {
   }
 
   // mouse move
-  async function draw(event: React.MouseEvent<HTMLCanvasElement>) {
+  function draw(event: React.MouseEvent<HTMLCanvasElement>) {
     if (!drawing.current) return;
 
     // get mouse coordinates
@@ -79,10 +108,11 @@ export default function Canvas({ roomCode }: CanvasProps) {
     continueStroke(x, y);
 
     // broadcast message
-    await channelRef.current?.send({
+    channelRef.current?.send({
       type: "broadcast",
       event: "drawing",
       payload: {
+        userId,
         type: "draw",
         x,
         y,
@@ -90,15 +120,16 @@ export default function Canvas({ roomCode }: CanvasProps) {
     });
   }
 
-  async function stopDrawing() {
+  function stopDrawing() {
     drawing.current = false;
     endStroke();
 
     // broadcast message
-    await channelRef.current?.send({
+    channelRef.current?.send({
       type: "broadcast",
       event: "drawing",
       payload: {
+        userId,
         type: "end",
       },
     });
@@ -126,6 +157,15 @@ export default function Canvas({ roomCode }: CanvasProps) {
     if (!ctx) return;
 
     ctx.closePath();
+  }
+
+  function clearCanvas() {
+    const ctx = ctxRef.current;
+    const canvas = canvasRef.current;
+
+    if (!ctx || !canvas) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
 
   return (  

@@ -1,8 +1,9 @@
 import { prisma } from "@/lib/prisma";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import TeamSelecter from "./TeamSelector";
 import LeaveRoomButton from "./LeaveRoomButton";
 import StartGameButton from "./StartGameButton";
+import { RoomStatus } from "@/app/generated/prisma/enums";
 
 interface RoomPageProps {
   params: Promise<{
@@ -27,6 +28,10 @@ export default async function Room({ params }: RoomPageProps) {
 
   if (!room) {
     notFound();
+  }
+
+  if (room.status === RoomStatus.PLAYING) {
+    redirect(`/room/${room.code}/game`);
   }
 
   const teamAPlayers = room.players.filter(player => player.team === "A");
