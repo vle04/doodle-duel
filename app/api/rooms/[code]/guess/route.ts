@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,6 +17,7 @@ export async function POST(req: NextRequest) {
         code: roomCode,
       },
       include: {
+        players: true,
         rounds: {
           orderBy: {
             number: "desc",
@@ -80,25 +82,35 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Player is not assigned to a team" }, { status: 400 });
     }
 
-    // update round winner
-    await prisma.round.update({
-      where: {
-        id: currentRound.id,
-      },
-      data: {
-        winner: player.team!,
-        endedAt: new Date(),
-      },
+    const updatedRoom = await prisma.$transaction(async (tx) => {
+      await tx.round.update({
+        where: {
+          id: currentRound.id,
+        },
+        data: {
+          winner: player.team!,
+          endedAt: new Date(),
+        },
+      });
+
+      return tx.room.update({
+        where: {
+          id: room.id,
+        },
+        data: {
+          scoreA: player.team === "A" ? { increment: 1 } : undefined,
+          scoreB: player.team === "B" ? { increment: 1 } : undefined,
+        },
+      });
     });
 
-    // update team score
-    const updatedRoom = await prisma.room.update({
-      where: {
-        id: room.id,
-      },
-      data: {
-        scoreA: player.team === "A" ? { increment: 1 } : undefined,
-        scoreB: player.team === "B" ? { increment: 1 } : undefined,
+    const supabase = await createClient();
+
+    await supabase.channel(`room:${roomCode}`).send({
+      type: "broadcast",
+      event: "round-ended",
+      payload: {
+        winner: player.team,
       },
     });
 

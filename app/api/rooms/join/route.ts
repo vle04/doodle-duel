@@ -3,10 +3,11 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId, roomCode } = await req.json();
+    const { userId, roomCode, team } = await req.json();
 
     // validate request
     if (!userId || !roomCode) {
@@ -25,7 +26,7 @@ export async function POST(req: NextRequest) {
     }
 
     // check if the user is already in the room
-    const existingPlayer = await prisma.roomPlayer.findUnique({
+    let roomPlayer = await prisma.roomPlayer.findUnique({
       where: {
         roomId_profileId: {
           roomId: room.id,
@@ -34,15 +35,33 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // add the user to the room
-    if (!existingPlayer) {
-      await prisma.roomPlayer.create({
+    if (!roomPlayer) {
+      roomPlayer = await prisma.roomPlayer.create({
         data: {
           roomId: room.id,
           profileId: userId,
         },
       });
     }
+
+    const updatedPlayers = await prisma.roomPlayer.findMany({
+      where: {
+        roomId: room.id,
+      },
+      include: {
+        profile: true,
+      },
+    });
+
+    const supabase = await createClient();
+
+    await supabase.channel(`room:${roomCode}`).send({
+      type: "broadcast",
+      event: "room-update",
+      payload: {
+        players: updatedPlayers,
+      },
+    });
 
     return NextResponse.json({ code: room.code });
   } catch (error) {
