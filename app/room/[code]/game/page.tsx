@@ -5,6 +5,8 @@ import { notFound, redirect } from "next/navigation";
 import { RoomStatus } from "@/app/generated/prisma/enums";
 import TeamCanvas from "./TeamCanvas";
 import GameInfo from "./GameInfo";
+import TeamChat from "./TeamChat";
+import GameRealtime from "./GameRealtime";
 import GuessBox from "./GuessBox";
 
 interface GamePageProps {
@@ -54,14 +56,19 @@ export default async function GamePage({ params }: GamePageProps) {
       </div>
 
       {/* scoreboard */}
-      <div className="flex justify-between w-full mt-6">
+      {/* <div className="flex justify-between w-full mt-6">
         <div className="text-xl font-semibold">
           Team A: {room.scoreA}
         </div>
         <div className="text-xl font-semibold">
           Team B: {room.scoreB}
         </div>
-      </div>
+      </div> */}
+
+      <GameRealtime
+        roomCode={code}
+        initialWinner={currentRound.winner}
+      />
 
       <GameInfo
         drawerAId={currentRound.drawerAId}
@@ -78,17 +85,23 @@ export default async function GamePage({ params }: GamePageProps) {
           roomPlayers={room.players.map((player) => ({
             profileId: player.profileId,
             team: player.team,
+            username: player.profile.username,
           }))}
           drawerAId={currentRound.drawerAId}
           drawerBId={currentRound.drawerBId}
         />
-        <div className="border-2 border-gray-400 w-[40%] h-[450px] rounded-lg flex items-center justify-center bg-white">
-          Chat
+        <div className="flex flex-col w-full">
+          <TeamChat
+            roomCode={code}
+            roomPlayers={room.players.map((player) => ({
+              profileId: player.profileId,
+              team: player.team,
+              username: player.profile.username,
+            }))}
+          />
+          {/* <GuessBox roomCode={code} /> */}
         </div>
       </div>
-
-      {/* guess box */}
-      <GuessBox roomCode={code} />
     </main>
   )
 }

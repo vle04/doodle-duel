@@ -2,6 +2,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { createClient } from "@/lib/supabase/server";
 import { RoomStatus } from "@/app/generated/prisma/enums";
 import { WORDS } from "@/lib/words";
 
@@ -86,6 +87,15 @@ export async function POST(req: NextRequest) {
         status: RoomStatus.PLAYING,
         currentRound: 1,
       }
+    });
+
+    const supabase = await createClient();
+    await supabase.channel(`room:${roomCode}`).send({
+      type: "broadcast",
+      event: "game-started",
+      payload: {
+        roomCode,
+      },
     });
 
     console.log(updatedRoom?.status);

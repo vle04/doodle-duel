@@ -20,8 +20,11 @@ export default function TeamSelecter({
       return;
     }
 
-    await fetch("/api/rooms/team", {
+    const res = await fetch(`/api/rooms/team`, {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         userId: user.id,
         roomCode,
@@ -29,10 +32,16 @@ export default function TeamSelecter({
       }),
     });
 
-    // refresh the page to update the team selection
-    // this is only for the current user, other users will not see the change until they refresh the page themselves
-    // later can use supabase realtime to update the team selection for all users in the room
-    router.refresh();
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.error ?? "Failed to join team");
+      return;
+    }
+
+    // the lobby listens for realtime team-update broadcasts, so refresh is not required
+    // if you still want the current user to refresh state immediately, you can
+    // keep router.refresh();
   }
 
   return (
