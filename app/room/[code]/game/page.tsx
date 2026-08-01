@@ -5,6 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import { RoomStatus } from "@/app/generated/prisma/enums";
 import TeamCanvas from "./TeamCanvas";
 import GameInfo from "./GameInfo";
+import GuessBox from "./GuessBox";
 
 interface GamePageProps {
   params: Promise<{
@@ -71,7 +72,7 @@ export default async function GamePage({ params }: GamePageProps) {
       />
 
       {/* canvas & chat */}
-      <div className="flex flex-row gap-10 mt-8">
+      <div className="flex flex-row gap-10 mt-8 items-center">
         <TeamCanvas
           roomCode={code}
           roomPlayers={room.players.map((player) => ({
@@ -87,15 +88,7 @@ export default async function GamePage({ params }: GamePageProps) {
       </div>
 
       {/* guess box */}
-      <div className="flex gap-3 mt-8">
-        <input
-          placeholder="Enter your guess..."
-          className="border rounded px-3 py-2 w-80"
-        />
-        <button className="bg-blue-500 text-white px-4 py-2 rounded">
-          Submit
-        </button>
-      </div>
+      <GuessBox roomCode={code} />
     </main>
   )
 }
