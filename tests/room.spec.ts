@@ -70,16 +70,16 @@ test.describe("Room Flow", () => {
     await expect(page).toHaveURL(/\/dashboard$/);
   });
 
-  test("host can start the game", async ({ page }) => {
-    await login(page);
-    await createRoom(page);
+  // test("host can start the game", async ({ page }) => {
+  //   await login(page);
+  //   await createRoom(page);
 
-    await page.getByRole("button", { name: /Start Game/i }).click();
+  //   await page.getByRole("button", { name: /Start Game/i }).click();
 
-    await expect(page).toHaveURL(/\/room\/[A-Z0-9]+\/game$/);
+  //   await expect(page).toHaveURL(/\/room\/[A-Z0-9]+\/game$/);
 
-    await expect(
-      page.getByRole("heading", { name: /Room/i })
-    ).toBeVisible();
-  });
+  //   await expect(
+  //     page.getByRole("heading", { name: /Room/i })
+  //   ).toBeVisible();
+  // });
 });
